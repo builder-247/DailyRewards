@@ -49,8 +49,9 @@ function displayRewardCards(data, variables) {
           ? (variables["type." + reward.reward]).replace("{$game}", capitalizeFirstLetter(reward.gameType))
           : variables["type." + reward.reward];
       var rarity = capitalizeFirstLetter(reward.rarity);
-        cards.push(new RewardCard(rarity, i, reward, amount))
-        ChatLib.chat("&5" + amount + " "  + name + " " + rarity)
+      var string = name
+        cards.push(new RewardCard(rarity, i, reward, amount, string))
+        ChatLib.chat("&5" + string)
     }
     ChatLib.chat(JSON.stringify(cards))
     //claimReward(2, id)
@@ -73,9 +74,10 @@ function parseHTML(html) {
 }
 
 function getCardImage(reward) {
+  // ChatLib.chat("&cReward: " + JSON.stringify(reward))
   switch(reward) {
     default:
-      return "chest_closed.png"
+      return "chest_opened.png"
     case "coins":
     case "dust":
     case "mystery_box":
@@ -94,11 +96,12 @@ var pickSound = new Sound({
   source: "pick.ogg"
 })
 
-function RewardCard(rarity, index, reward, amount) {
+function RewardCard(rarity, index, reward, amount, string) {
     this.rarity = rarity.toLowerCase();
     this.index = index;
     this.reward = reward;
     this.amount = amount;
+    this.string = string;
     this.x = ((Renderer.screen.getWidth() - card_width) / 2 - (card_width + card_spacing)) + this.index * (card_width + card_spacing);
     this.y = (Renderer.screen.getHeight() - card_height) / 2;
     this.revealed = false;
@@ -107,19 +110,29 @@ function RewardCard(rarity, index, reward, amount) {
     this.raritySound = new Sound({
       source: this.rarity + ".ogg"
     });
-
+// F59D51
     this.render = function() {
         if (this.hovered()) {
               var bigger = 10;
               Renderer.drawImage(this.cardTexture, this.x - bigger / 2, this.y - bigger / 2, card_width + bigger, card_height + bigger);
           if (!this.revealed) {
               this.reveal();
+          } else {
+
           }
         } else {
             Renderer.drawImage(this.cardTexture, this.x, this.y, card_width, card_height);
         }
         if (this.revealed) {
             Renderer.drawImage(this.rewardTexture, this.x, this.y, card_width, card_height);
+
+            var stringWidth = ((this.x + (card_width / 2)) - Renderer.getStringWidth(this.string) / 2);
+            var stringHeight = (this.y + card_height * 0.7);
+            Renderer.drawString(this.string, stringWidth, stringHeight);
+
+            var amountWidth = ((this.x + (card_width / 2)) - Renderer.getStringWidth(this.amount) / 2);
+            var amountHeight = (this.y + card_height * 0.85);
+            Renderer.drawString(this.amount, amountWidth, amountHeight);
         }
         var renderWidth = Renderer.screen.getWidth();
         var renderHeight = Renderer.screen.getHeight();
@@ -141,7 +154,7 @@ function RewardCard(rarity, index, reward, amount) {
         hoverSound.play();
         this.raritySound.play();
         this.cardTexture = Image.load("./config/ChatTriggers/modules/DailyRewards/assets/card_" + this.rarity + ".png");
-        this.rewardTexture = Image.load("./config/ChatTriggers/modules/DailyRewards/assets/" + getCardImage());
+        this.rewardTexture = Image.load("./config/ChatTriggers/modules/DailyRewards/assets/" + getCardImage(reward.reward));
     }
     this.select = function() {
       //claimReward(this.index, id);
