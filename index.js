@@ -1,5 +1,5 @@
 var cards = [];
-register("renderOverlay", function() {cards.forEach(function(RewardCard) {RewardCard.render();})})
+register("renderOverlay", function() {cards.forEach(function(RewardCard) {RewardCard.render();})});
 register("chat", dailyRewardLink).setChatCriteria("&r&bhttp://rewards.hypixel.net/claim-reward/${id}&r\n&r").setParameter("contains");
 register("chat", dailyRewardLink).setChatCriteria("https://rewards.hypixel.net/claim-reward/${id}").setParameter("contains");
 
@@ -102,8 +102,8 @@ function RewardCard(rarity, index, reward, amount) {
     this.x = ((Renderer.screen.getWidth() - card_width) / 2 - (card_width + card_spacing)) + this.index * (card_width + card_spacing);
     this.y = (Renderer.screen.getHeight() - card_height) / 2;
     this.revealed = false;
-    this.cardTexture = Image.load("card_back.png");
-    this.rewardTexture = Image.load("coins.png")
+    this.cardTexture = Image.load("./config/ChatTriggers/modules/DailyRewards/assets/card_back.png");
+    this.rewardTexture = Image.load("./config/ChatTriggers/modules/DailyRewards/assets/coins.png")
     this.raritySound = new Sound({
       source: this.rarity + ".ogg"
     });
@@ -113,7 +113,7 @@ function RewardCard(rarity, index, reward, amount) {
               var bigger = 10;
               Renderer.drawImage(this.cardTexture, this.x - bigger / 2, this.y - bigger / 2, card_width + bigger, card_height + bigger);
           if (!this.revealed) {
-              this.reveal()
+              this.reveal();
           }
         } else {
             Renderer.drawImage(this.cardTexture, this.x, this.y, card_width, card_height);
@@ -138,13 +138,13 @@ function RewardCard(rarity, index, reward, amount) {
     }
     this.reveal = function() {
         this.revealed = true;
-        hoverSound.play()
+        hoverSound.play();
         this.raritySound.play();
-        //this.cardTexture = Image.load("card_" + this.rarity + ".png");
-        //this.rewardTexture = Image.load(getCardImage())
+        this.cardTexture = Image.load("./config/ChatTriggers/modules/DailyRewards/assets/card_" + this.rarity + ".png");
+        this.rewardTexture = Image.load("./config/ChatTriggers/modules/DailyRewards/assets/" + getCardImage());
     }
     this.select = function() {
-      //claimReward(this.index, id)
+      //claimReward(this.index, id);
       variables.currentScore += 1;
       pickSound.play();
     }
