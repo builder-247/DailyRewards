@@ -80,6 +80,7 @@ function getCardImage(reward) {
       return "chest_open.png"
     case "coins":
     case "dust":
+    case "souls":
     case "mystery_box":
       return reward + ".png"
   }
