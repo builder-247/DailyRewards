@@ -3,11 +3,6 @@ register("renderOverlay", function() {cards.forEach(function(RewardCard) {Reward
 register("chat", dailyRewardLink).setChatCriteria("&r&bhttp://rewards.hypixel.net/claim-reward/${id}&r\n&r").setParameter("contains");
 register("chat", dailyRewardLink).setChatCriteria("https://rewards.hypixel.net/claim-reward/${id}").setParameter("contains");
 
-
-function p(msg) {
-    print("[DailyRewards] " + msg)
-}
-
 var id;
 function dailyRewardLink(_id) {
     id = _id;
@@ -24,15 +19,6 @@ function claimReward(option, id) {
   ChatLib.chat("Claiming reward " + option)
     var link = "https://rewards.hypixel.net/claim-reward/claim?option=" + option + "&id=" + id + "&activeAd=0" + "&_csrf=" + token + "&watchedFallback=false" + "&skipped=0"
     HTTP(link, "POST", cookies)
-}
-
-function capitalizeFirstLetter(i) {
-    var string = i.toLowerCase();
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
-function getGameName() {
-
 }
 
 function displayRewardCards(data, variables) {
@@ -73,19 +59,6 @@ function parseHTML(html) {
     displayRewardCards(data, variables)
 }
 
-function getCardImage(reward) {
-  // ChatLib.chat("&cReward: " + JSON.stringify(reward))
-  switch(reward) {
-    default:
-      return "chest_open.png"
-    case "coins":
-    case "dust":
-    case "souls":
-    case "mystery_box":
-      return reward + ".png"
-  }
-}
-
 var card_height = 157;
 var card_width = 110;
 var card_spacing = 20;
@@ -111,7 +84,6 @@ function RewardCard(rarity, index, reward, amount, string) {
     this.raritySound = new Sound({
       source: this.rarity + ".ogg"
     });
-// F59D51
     this.render = function() {
         if (this.hovered()) {
               var bigger = 10;
