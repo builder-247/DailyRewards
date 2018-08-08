@@ -77,7 +77,7 @@ function getCardImage(reward) {
   // ChatLib.chat("&cReward: " + JSON.stringify(reward))
   switch(reward) {
     default:
-      return "chest_opened.png"
+      return "chest_open.png"
     case "coins":
     case "dust":
     case "mystery_box":
