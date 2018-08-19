@@ -18,6 +18,7 @@ function getCardImage(reward) {
     case "coins":
     case "dust":
     case "souls":
+    case "experience":
     case "mystery_box":
     case "adsense_token":
       return reward + ".png"
