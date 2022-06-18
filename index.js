@@ -1,74 +1,110 @@
-var cards = [];
-register("renderOverlay", function() {cards.forEach(function(RewardCard) {RewardCard.render();})});
-register("chat", dailyRewardLink).setChatCriteria("&r&bhttp://rewards.hypixel.net/claim-reward/${id}&r\n&r").setParameter("contains");
-register("chat", dailyRewardLink).setChatCriteria("https://rewards.hypixel.net/claim-reward/${id}").setParameter("contains");
+import axios from 'axios';
+import { capitalizeFirstLetter, getCardImage, getRarityColor } from './utils'
 
-var id;
-function dailyRewardLink(_id) {
-    id = _id;
-    var link = "https://rewards.hypixel.net/claim-reward/" + id
-      HTTP(link, "GET", null);
+const cards = [];
+register("renderOverlay", () => {cards.forEach(RewardCard => RewardCard.render())});
+register("chat", dailyRewardLink).setCriteria(/http:\/\/rewards.hypixel.net\/claim-reward\/(id)/);
+register("chat", dailyRewardLink).setCriteria(/https:\/\/rewards.hypixel.net\/claim-reward\/(id)}/);
+
+const cookies = [];
+/*
+* Pick cookies from headers. NOTE: this is extremely cursed
+ */
+function cookieParser(value) {
+  const parsed = String(value);
+  const string = parsed.substring(1, parsed.length - 1);
+  // console.log('parser: ' + string)
+  if (string.startsWith('_')) {
+    cookies.push(string)
+  }
+  return string;
 }
 
-register("command", function(id) {
+let id;
+function dailyRewardLink(_id) {
+    id = _id;
+    const link = "https://rewards.hypixel.net/claim-reward/" + id
+      axios.get({
+        url: link,
+        parseHeaders: true,
+        headersParser: cookieParser
+      }).then(response => {
+        // console.log(cookies)
+        // console.log(JSON.stringify(response.headers['set-cookie']))
+        // console.log(response.body)
+        parseHTML(response.data)
+      }).catch(e => console.log(e));
+}
+
+register("command", (id) => {
   ChatLib.chat(id)
     dailyRewardLink(id)
-}).setName("test");
+}).setCommandName("test");
 
 function claimReward(option, id) {
   ChatLib.chat("Claiming reward " + option)
-    var link = "https://rewards.hypixel.net/claim-reward/claim?option=" + option + "&id=" + id + "&activeAd=0" + "&_csrf=" + token + "&watchedFallback=false" + "&skipped=0"
-    HTTP(link, "POST", cookies)
+    const link = "https://rewards.hypixel.net/claim-reward/claim?option=" + option + "&id=" + id + "&activeAd=0" + "&_csrf=" + token + "&watchedFallback=false" + "&skipped=0"
+    axios.post(link, {
+      headers: {
+        'set-cookie': ''
+      }
+    })
 }
 
 function displayRewardCards(data, variables) {
     if (data.hasOwnProperty("error")) {
-        p("Error: " + data.error)
+        print("Error: " + data.error)
         return
     }
-    ChatLib.chat(token)
-    for (i = 0; i < data.rewards.length; i++) {
-      var reward = data.rewards[i];
-      //ChatLib.chat("Reward " + i + ": " + JSON.stringify(reward));
-      var amount = reward.amount;
-      var name = (reward.hasOwnProperty("gameType"))
-          ? (variables["type." + reward.reward]).replace("{$game}", capitalizeFirstLetter(reward.gameType))
-          : variables["type." + reward.reward];
-      var rarity = capitalizeFirstLetter(reward.rarity);
-      var string = name
-        cards.push(new RewardCard(rarity, i, reward, amount, string))
-        ChatLib.chat("&5" + string)
-    }
+    // ChatLib.chat(token)
+    data.rewards.forEach((reward, i) => {
+      ChatLib.chat("Reward " + i + ": " + JSON.stringify(reward));
+      const amount = reward.amount;
+      const name = (reward.hasOwnProperty("gameType"))
+        ? (variables["type." + reward.reward]).replace("{$game}", capitalizeFirstLetter(reward.gameType))
+        : variables["type." + reward.reward];
+      const rarity = capitalizeFirstLetter(reward.rarity);
+      const string = name
+      cards.push(new RewardCard(rarity, i, reward, amount, string))
+      ChatLib.chat("&5" + string)
+    });
     ChatLib.chat(JSON.stringify(cards))
     //claimReward(2, id)
 }
 
-var token, data, variables, ga;
+let token, data, variables, ga;
 function parseHTML(html) {
-    var token_regex = /window.securityToken = "([\s\S]*)";/
-    var data_regex = /window.appData = '([\s\S]*)';/;
-    var var_regex = /window.i18n = ([\s\S]*),        };/;
-    var ga_regex = /ga\('create', '(UA-\d{6,10}-\d{1,4})', 'auto'\);/
+    const token_regex = /window.securityToken = "([\s\S]*)";/
+    const data_regex = /window.appData = '([\s\S]*)';/;
+    const var_regex = /window.i18n = ([\s\S]*),        };/;
+    const ga_regex = /ga\('create', '(UA-\d{6,10}-\d{1,4})', 'auto'\);/
 
     token = token_regex.exec(html)[1]
     data = JSON.parse(data_regex.exec(html)[1]);
     variables = JSON.parse(var_regex.exec(html)[1].concat("}").replace(/\\'/g, "'"));
-    ga = ga_regex.exec(html)[1]
+    // console.log(JSON.stringify(variables))
 
-    ChatLib.chat("ga: " + ga)
+    ga = 'GA-123'//ga_regex.exec(html)//[1]
+
+    // console.log(JSON.stringify(ga))
+    // ChatLib.chat("ga: " + ga)
     displayRewardCards(data, variables)
 }
 
-var card_height = 157;
-var card_width = 110;
-var card_spacing = 20;
+const card_height = 157;
+const card_width = 110;
+const card_spacing = 20;
 
-var hoverSound = new Sound({
+const hoverSound = new Sound({
   source: "hover.ogg"
 })
-var pickSound = new Sound({
+const pickSound = new Sound({
   source: "pick.ogg"
 })
+
+function imageFromLocalPath(file) {
+  return new Image(javax.imageio.ImageIO.read(new java.io.File(`./config/ChatTriggers/modules/DailyRewardsV2/assets/${file}`)))
+}
 
 function RewardCard(rarity, index, reward, amount, string) {
     this.rarity = rarity.toLowerCase();
@@ -79,41 +115,42 @@ function RewardCard(rarity, index, reward, amount, string) {
     this.x = ((Renderer.screen.getWidth() - card_width) / 2 - (card_width + card_spacing)) + this.index * (card_width + card_spacing);
     this.y = (Renderer.screen.getHeight() - card_height) / 2;
     this.revealed = false;
-    this.cardTexture = Image.load("./config/ChatTriggers/modules/DailyRewards/assets/card_back.png");
-    this.rewardTexture = Image.load("./config/ChatTriggers/modules/DailyRewards/assets/coins.png")
+    this.cardTexture = imageFromLocalPath("card_back.png");
+    this.rewardTexture = imageFromLocalPath("coins.png");
     this.raritySound = new Sound({
-      source: this.rarity + ".ogg"
+      source: String(this.rarity + ".ogg")
     });
-    this.render = function() {
+    this.render = () => {
         if (this.hovered()) {
-              var bigger = 10;
-              Renderer.drawImage(this.cardTexture, this.x - bigger / 2, this.y - bigger / 2, card_width + bigger, card_height + bigger);
+              const bigger = 10;
+          this.cardTexture.draw(this.x - bigger / 2, this.y - bigger / 2, card_width + bigger, card_height + bigger);
           if (!this.revealed) {
               this.reveal();
           } else {
 
           }
         } else {
-            Renderer.drawImage(this.cardTexture, this.x, this.y, card_width, card_height);
+          this.cardTexture.draw(this.x, this.y, card_width, card_height);
         }
         if (this.revealed) {
-            Renderer.drawImage(this.rewardTexture, this.x, this.y, card_width, card_height);
+            this.rewardTexture.draw(this.x, this.y, card_width, card_height);
 
-            var stringWidth = ((this.x + (card_width / 2)) - Renderer.getStringWidth(this.string) / 2);
-            var stringHeight = (this.y + card_height * 0.7);
+            const stringWidth = ((this.x + (card_width / 2)) - Renderer.getStringWidth(this.string) / 2);
+            const stringHeight = (this.y + card_height * 0.7);
             Renderer.drawString(this.string, stringWidth, stringHeight);
 
-            var amountWidth = ((this.x + (card_width / 2)) - Renderer.getStringWidth(this.amount) / 2);
-            var amountHeight = (this.y + card_height * 0.85);
+            const amountWidth = ((this.x + (card_width / 2)) - Renderer.getStringWidth(this.amount) / 2);
+            const amountHeight = (this.y + card_height * 0.85);
+            Renderer.colorize(...[108, 219, 216] /*getRarityColor(this.rarity)*/);
             Renderer.drawString(this.amount, amountWidth, amountHeight);
         }
-        var renderWidth = Renderer.screen.getWidth();
-        var renderHeight = Renderer.screen.getHeight();
+        const renderWidth = Renderer.screen.getWidth();
+        const renderHeight = Renderer.screen.getHeight();
 
-        var dailyString = variables.currentScore + data.dailyStreak.score + "      " + variables.highScore + data.dailyStreak.highScore;
-        var titleString = /*variables["rewards.title.clickToClaim"]*/ "This is an example string";
+        const dailyString = variables.currentScore + data.dailyStreak.score + "      " + variables.highScore + data.dailyStreak.highScore;
+        const titleString = /*variables["rewards.title.clickToClaim"]*/ "This is an example string";
         //(renderWidth / 2) - (Renderer.getStringWidth(titleString) / 2), renderHeight * 0.2
-        var renderTitleString = Renderer.text(titleString, 100, 200).setColor(0xDDBA53).setScale(3).draw();
+        // const renderTitleString = new Text(titleString, 100, 200).setColor(0xDDBA53).setScale(3).draw();
         Renderer.drawString(dailyString, (renderWidth / 2) - (Renderer.getStringWidth(dailyString) / 2), renderHeight * 0.75)
     }
     this.hovered = function() {
@@ -126,8 +163,8 @@ function RewardCard(rarity, index, reward, amount, string) {
         this.revealed = true;
         hoverSound.play();
         this.raritySound.play();
-        this.cardTexture = Image.load("./config/ChatTriggers/modules/DailyRewards/assets/card_" + this.rarity + ".png");
-        this.rewardTexture = Image.load("./config/ChatTriggers/modules/DailyRewards/assets/" + getCardImage(reward.reward));
+        this.cardTexture = imageFromLocalPath("card_" + this.rarity + ".png");
+        this.rewardTexture = imageFromLocalPath(getCardImage(reward.reward));
     }
     this.select = function() {
       //claimReward(this.index, id);

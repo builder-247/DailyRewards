@@ -29,8 +29,10 @@ function getRarityColor(rarity) {
   switch (rarity) {
     default:
     case "common":
+      return [221, 186, 83]
       return 0xDDBA53;
     case "rare":
+      return [108, 219, 216]
       return 0x6CDBD8;
     case "epic":
       // Placeholder
@@ -39,4 +41,10 @@ function getRarityColor(rarity) {
       // Placeholder
       return 0x2A2A00;
   }
+}
+
+module.exports = {
+  capitalizeFirstLetter,
+  getCardImage,
+  getRarityColor
 }
