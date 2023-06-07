@@ -98,7 +98,7 @@ const pickSound = new Sound({
 });
 
 function imageFromLocalPath(file) {
-  return new Image(javax.imageio.ImageIO.read(new java.io.File(`./config/ChatTriggers/modules/DailyRewardsV2/assets/${file}`)))
+  return new Image(javax.imageio.ImageIO.read(new java.io.File(`./config/ChatTriggers/modules/DailyRewards/assets/${file}`)))
 }
 
 function RewardCard(rarity, index, reward, amount, string) {
